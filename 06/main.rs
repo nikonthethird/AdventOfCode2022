@@ -10,8 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .windows(size)
             .enumerate()
             .find(|(_, chars)| chars.iter().collect::<HashSet<_>>().len() == size)
-            .ok_or("no match")
-            .unwrap();
+            .ok_or("no match")?;
         println!("2022-12-06 Part {}: {}", size / 10 + 1, index + size);
     }
     Ok(())
