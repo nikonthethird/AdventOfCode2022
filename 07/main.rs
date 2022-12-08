@@ -3,28 +3,22 @@ use std::{error::Error, fs::read_to_string, collections::{BTreeMap, VecDeque}};
 use lazy_static::lazy_static;
 use regex::Regex;
 
+#[derive(Default)]
 struct Directory {
     directories: BTreeMap<String, Directory>,
     files: BTreeMap<String, usize>,
 }
 
 impl Directory {
-    fn new() -> Self {
-        Self {
-            directories: Default::default(),
-            files: Default::default(),
-        }
-    }
-
     fn size(&self) -> usize {
         self.files.values().sum::<usize>() +
-        self.directories.values().map(|directory| directory.size()).sum::<usize>()
+        self.directories.values().map(Directory::size).sum::<usize>()
     }
 
     fn sum_of_sizes(&self) -> usize {
         let size = self.size();
         (if size <= 100_000 { size } else { 0 }) +
-        self.directories.values().map(|directory| directory.sum_of_sizes()).sum::<usize>()
+        self.directories.values().map(Directory::sum_of_sizes).sum::<usize>()
     }
 
     fn size_of_dir_to_delete(&self, unused_space: usize) -> Option<usize> {
@@ -47,7 +41,7 @@ impl Directory {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut input_lines = read_to_string("input.txt")?.split('\n').skip(1).map(ToOwned::to_owned).collect::<VecDeque<_>>();
-    let mut root_directory = Directory::new();
+    let mut root_directory = Directory::default();
 
     handle_cd(&mut root_directory, &mut input_lines)?;
 
@@ -73,8 +67,7 @@ fn handle_cd(directory: &mut Directory, input_lines: &mut VecDeque<String>) -> R
                 handle_ls(directory, input_lines)?,
             "cd" if parameter_opt.as_ref().map(String::as_str) != Some("..") => {
                 let parameter = parameter_opt.ok_or("no command parameter")?;
-                let child_directory = Directory::new();
-                directory.directories.entry(parameter.clone()).or_insert(child_directory);
+                directory.directories.entry(parameter.clone()).or_default();
                 handle_cd(directory.directories.get_mut(&parameter).ok_or("no child directory")?, input_lines)?;
             }
             _ => break,
@@ -84,7 +77,6 @@ fn handle_cd(directory: &mut Directory, input_lines: &mut VecDeque<String>) -> R
 
 fn handle_ls(directory: &mut Directory, input_lines: &mut VecDeque<String>) -> Result<(), Box<dyn Error>> {
     lazy_static! {
-        static ref DIR_REGEX: Regex = Regex::new(r"^dir (?P<name>.+)$").unwrap();
         static ref FILE_REGEX: Regex = Regex::new(r"^(?P<len>\d+) (?P<name>.+)$").unwrap();
     }
     Ok(while let Some(front) = input_lines.front() && !front.starts_with("$") {
