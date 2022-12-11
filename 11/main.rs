@@ -43,9 +43,9 @@ impl Monkey {
             .collect::<Vec<_>>();
         let operation = operation_match
             .name("operation")
-            .map(|operation_match| operation_match.as_str().to_owned())
+            .map(|operation_match| operation_match.as_str())
             .and_then(|operation| {
-                let operation_match = INNER_OPERATION_REGEX.captures(&operation)?;
+                let operation_match = INNER_OPERATION_REGEX.captures(operation)?;
                 let operator = operation_match.name("operator")?.as_str().to_owned();
                 let parameter = match operation_match.name("parameter")?.as_str() {
                     "old" => None,
