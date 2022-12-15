@@ -3,7 +3,6 @@ use std::{error::Error, fs::read_to_string};
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[derive(Debug)]
 struct Sensor {
     sensor_x: isize,
     sensor_y: isize,
